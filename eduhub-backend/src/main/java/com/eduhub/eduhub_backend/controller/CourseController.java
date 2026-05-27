@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-
+@RequestMapping("/course")
 @RestController
 public class CourseController {
     //    @Autowired
@@ -44,6 +44,16 @@ public class CourseController {
         courseList.add(new Course("CS104", "C++", 3));
         courseList.add(new Course("CS105", "DBMS", 3));
     }
+    @GetMapping("/gc")
+    public ResponseEntity<List<Course>> getAllCourse(){
+        return ResponseEntity.ok(courseList);
+    }
+    //http://localhost:8080/course/gc/CS105
+    @GetMapping("/gc/{courseCode}")
+    public ResponseEntity<Course> getCourse(@PathVariable String courseCode){
+        return courseList.stream().filter(c->c.getCourseCode().equalsIgnoreCase(courseCode))
+            .findFirst().map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    }
     @GetMapping("/courses")
     public ResponseEntity<List<Course>> getCourses(){
         return new ResponseEntity<>(courseList, HttpStatus.OK);
@@ -72,22 +82,27 @@ public class CourseController {
     //http://localhost:8080/cc
     @PostMapping("cc")
     public ResponseEntity<Course> createCourse(@RequestBody Course course){
-        System.out.println(course.getCourseCode());
-        System.out.println(course.getSubjectName());
-        System.out.println(course.getCredits());
+        courseList.add(course);
         return ResponseEntity.ok(course);
     }
 
     @PutMapping("{courseCode}/upd")
-    public ResponseEntity updateStudent(@PathVariable("courseCode") String courseCode,
-                                        @RequestBody Course course){
+    public ResponseEntity updateCourse(@PathVariable("courseCode") String courseCode,
+                                        @RequestBody Course updateCourse){
+
+        Course course=courseList.stream().filter(c->c.getCourseCode().equalsIgnoreCase(courseCode))
+                .findFirst().orElse(null);
+        course.setCourseCode(updateCourse.getCourseCode());
+        course.setCredits(updateCourse.getCredits());
         return ResponseEntity.accepted().body(course);
     }
 
     @DeleteMapping("/{courseCode}/del")
     public ResponseEntity deleteCourse(
             @PathVariable("courseCode") String courseCode) {
-
+        Course course=courseList.stream().filter(c->c.getCourseCode().equalsIgnoreCase(courseCode))
+                .findFirst().orElse(null);
+        courseList.remove(course);
         return ResponseEntity.accepted().body("deleted successfully");
     }
 
