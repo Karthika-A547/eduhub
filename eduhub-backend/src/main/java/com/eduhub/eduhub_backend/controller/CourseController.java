@@ -4,6 +4,7 @@ import com.eduhub.eduhub_backend.component.Course;
 import com.eduhub.eduhub_backend.component.CourseService;
 import com.eduhub.eduhub_backend.component.DeptService;
 import com.eduhub.eduhub_backend.component.Student;
+import com.eduhub.eduhub_backend.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +53,7 @@ public class CourseController {
     @GetMapping("/gc/{courseCode}")
     public ResponseEntity<Course> getCourse(@PathVariable String courseCode){
         return courseList.stream().filter(c->c.getCourseCode().equalsIgnoreCase(courseCode))
-            .findFirst().map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            .findFirst().map(ResponseEntity::ok).orElseThrow(()->new ResourceNotFoundException("Course","CourseCode",courseCode));
     }
     @GetMapping("/courses")
     public ResponseEntity<List<Course>> getCourses(){
@@ -78,6 +79,16 @@ public class CourseController {
         Course course=new Course(courseCode,subjectName,credits);
         return ResponseEntity.ok(course);
     }
+    @PutMapping("/query/{code}")
+    public String queryCourse(@PathVariable String code){
+        if(code.startsWith("*")){
+            throw new IllegalArgumentException(("It is having a special character"));
+        } else if (code.startsWith("6")) {
+            throw new RuntimeException();
+
+        }
+        return code;
+    }
 
     //http://localhost:8080/cc
     @PostMapping("cc")
@@ -91,7 +102,7 @@ public class CourseController {
                                         @RequestBody Course updateCourse){
 
         Course course=courseList.stream().filter(c->c.getCourseCode().equalsIgnoreCase(courseCode))
-                .findFirst().orElse(null);
+                .findFirst().orElseThrow(()->new ResourceNotFoundException("Course","CourseCode",courseCode));
         course.setCourseCode(updateCourse.getCourseCode());
         course.setCredits(updateCourse.getCredits());
         return ResponseEntity.accepted().body(course);
@@ -101,7 +112,7 @@ public class CourseController {
     public ResponseEntity deleteCourse(
             @PathVariable("courseCode") String courseCode) {
         Course course=courseList.stream().filter(c->c.getCourseCode().equalsIgnoreCase(courseCode))
-                .findFirst().orElse(null);
+                .findFirst().orElseThrow(()->new ResourceNotFoundException("Course","CourseCode",courseCode));
         courseList.remove(course);
         return ResponseEntity.accepted().body("deleted successfully");
     }
